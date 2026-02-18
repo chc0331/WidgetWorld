@@ -12,7 +12,7 @@ import javax.inject.Singleton
 /**
  * WidgetDocument를 위한 Proto DataStore Wrapper
  * 
- * DataStore<WidgetDocument> 인스턴스를 감싸서 사용하기 편한 API를 제공합니다.
+ * Hilt가 제공하는 DataStore<WidgetDocument> 인스턴스를 감싸서 사용하기 편한 API를 제공합니다.
  * 
  * 저장 위치: `{app_internal_storage}/datastore/widget_document.pb`
  * 
@@ -37,28 +37,15 @@ import javax.inject.Singleton
  */
 @Singleton
 class WidgetDataStore @Inject constructor(
-    @ApplicationContext private val context: Context
+    private val dataStore: DataStore<WidgetDocument>
 ) {
-    /**
-     * Context extension property로 DataStore 인스턴스 생성
-     * 
-     * 이 패턴은 Android DataStore 공식 가이드에서 권장하는 방식입니다:
-     * - Lazy initialization: 실제 사용 시점에 생성
-     * - Singleton: Context당 하나의 인스턴스만 존재
-     * - Delegate pattern: by dataStore를 사용한 위임
-     */
-    private val Context.widgetDocumentDataStore: DataStore<WidgetDocument> by dataStore(
-        fileName = "widget_document.pb",
-        serializer = WidgetDocumentSerializer
-    )
-    
     /**
      * WidgetDocument의 Flow
      * 
      * 데이터가 변경될 때마다 새로운 값이 emit됩니다.
      * Repository에서 이 Flow를 그대로 노출하여 ViewModel이 관찰할 수 있습니다.
      */
-    val data: Flow<WidgetDocument> = context.widgetDocumentDataStore.data
+    val data: Flow<WidgetDocument> = dataStore.data
     
     /**
      * WidgetDocument를 원자적으로 업데이트합니다.
@@ -83,7 +70,7 @@ class WidgetDataStore @Inject constructor(
     suspend fun updateData(
         transform: suspend (WidgetDocument) -> WidgetDocument
     ): WidgetDocument {
-        return context.widgetDocumentDataStore.updateData(transform)
+        return dataStore.updateData(transform)
     }
 }
 
