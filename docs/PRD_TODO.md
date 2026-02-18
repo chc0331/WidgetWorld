@@ -76,13 +76,30 @@
 
 ## 3) Storage: DataStore(Proto)
 - [ ] Proto DataStore 구현
-  - [ ] 파일명/저장 위치 결정
+  - [ ] WidgetDocumentSerializer 구현 (Proto parsing/writing)
+  - [ ] WidgetDataStore 클래스 구현 (DataStore wrapper)
+  - [ ] 파일명: `widget_document.pb` (앱 내부 저장소)
   - [ ] 기본값: 빈 `WidgetDocument` 제공
-  - [ ] 읽기/쓰기/에러 처리
+  - [ ] 읽기/쓰기/에러 처리 (IOException, CorruptionException)
 - [ ] Repository 구현
-  - [ ] `observeWidgetDocument(): Flow<WidgetDocument>`
-  - [ ] `updateWidgetDocument(transform)` 형태로 원자적 업데이트
+  - [ ] WidgetRepositoryImpl 작성 (WidgetRepository 인터페이스 구현)
+  - [ ] `observeWidgetDocument(): Flow<WidgetDocument>` 구현
+  - [ ] `updateWidgetDocument(transform)` 형태로 원자적 업데이트 구현
+  - [ ] `getWidgetDocument(): Result<WidgetDocument>` 구현 (일회성 조회)
+  - [ ] 모든 예외를 Result로 래핑하여 Domain 레이어에 전달
   - [ ] drop 직후 자동 저장 타이밍 확정
+- [ ] Hilt DI 모듈 구성
+  - [ ] DataModule에 DataStore 제공 메서드 추가
+  - [ ] DataModule에 WidgetDataStore 제공 메서드 추가
+  - [ ] DataModule에 Repository 바인딩 추가
+- [ ] 데이터 흐름 검증
+  - [ ] 초기 로드 테스트 (빈 문서)
+  - [ ] 저장 및 앱 재시작 후 복원 테스트
+- [ ] 향후 Room 확장 고려사항 (MVP는 DataStore만 사용)
+  - [ ] Repository 인터페이스는 현재대로 유지 (변경 없음)
+  - [ ] 향후 여러 위젯 관리 시: DataStore(활성 문서 ID) + Room(전체 문서)
+  - [ ] 추가 Repository 생성 가능: `WidgetListRepository` (목록 관리용)
+  - [ ] DataStore 직접 의존 회피, 주입받아 사용 (향후 LocalDataSource 추상화 가능)
 
 ## 4) UX Flow (PRD 5)
 
