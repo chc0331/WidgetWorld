@@ -1,12 +1,16 @@
 package com.android.widgetworld.feature.editor.viewmodel
 
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.unit.Density
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.widgetworld.core.model.LayoutDimensions
+import com.android.widgetworld.core.model.SampleComponents
 import com.android.widgetworld.domain.usecase.LoadWidgetDocumentUseCase
 import com.android.widgetworld.domain.usecase.SetLayoutTypeUseCase
+import com.android.widgetworld.feature.editor.model.DragState
 import com.android.widgetworld.proto.LayoutType
 import com.android.widgetworld.proto.WidgetDocument
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -27,6 +31,7 @@ import javax.inject.Inject
  * @property widgetDocument 현재 편집 중인 위젯 문서
  * @property canvasBounds Canvas 영역의 경계 (Window 좌표계)
  * @property layoutBounds Layout 영역의 경계 (Canvas 내부, Layout 좌표계)
+ * @property dragState Drag 상태 (nullable, Drag 중이 아니면 null)
  * @property isLoading 문서 로딩 중 여부
  * @property errorMessage 에러 메시지 (nullable)
  */
@@ -34,6 +39,7 @@ data class EditorUiState(
     val widgetDocument: WidgetDocument = WidgetDocument.getDefaultInstance(),
     val canvasBounds: Rect? = null,
     val layoutBounds: Rect? = null,
+    val dragState: DragState? = null,
     val isLoading: Boolean = true,
     val errorMessage: String? = null
 ) {
@@ -48,6 +54,12 @@ data class EditorUiState(
      */
     val hasLayout: Boolean
         get() = layoutType != LayoutType.LAYOUT_TYPE_UNSPECIFIED
+    
+    /**
+     * Drag 중인지 여부
+     */
+    val isDragging: Boolean
+        get() = dragState?.isDragging == true
 }
 
 /**
@@ -63,6 +75,19 @@ sealed interface EditorUiEvent {
      * @property layoutType 선택한 Layout 타입 (MEDIUM/LARGE/FULL)
      */
     data class OnLayoutTypeSelected(val layoutType: LayoutType) : EditorUiEvent
+    
+    /**
+     * 컴포넌트 Long Press
+     * 
+     * PRD 참조: 섹션 4-3-1 "Long Press Event"
+     * 
+     * @property component Long Press된 컴포넌트
+     * @property dragContent Drag 중 표시할 컨텐츠
+     */
+    data class OnComponentLongPress(
+        val component: SampleComponents.ComponentItem,
+        val dragContent: @Composable () -> Unit
+    ) : EditorUiEvent
 }
 
 /**
@@ -98,6 +123,7 @@ class EditorViewModel @Inject constructor(
             widgetDocument = document,
             canvasBounds = localState.canvasBounds,
             layoutBounds = localState.layoutBounds,
+            dragState = localState.dragState,
             isLoading = false,
             errorMessage = localState.errorMessage
         )
@@ -118,6 +144,9 @@ class EditorViewModel @Inject constructor(
         when (event) {
             is EditorUiEvent.OnLayoutTypeSelected -> {
                 handleLayoutTypeSelected(event.layoutType)
+            }
+            is EditorUiEvent.OnComponentLongPress -> {
+                handleComponentLongPress(event.component, event.dragContent)
             }
         }
     }
@@ -142,6 +171,36 @@ class EditorViewModel @Inject constructor(
                         it.copy(errorMessage = "Layout 저장 실패: ${exception.message}")
                     }
                 }
+        }
+    }
+    
+    /**
+     * 컴포넌트 Long Press 처리
+     * 
+     * PRD 참조: 섹션 4-3-1 "Long Press Event → Drag 준비"
+     * 
+     * DragState를 초기화하고 Drag 준비 상태로 전환합니다.
+     * 
+     * @param component Long Press된 컴포넌트
+     * @param dragContent Drag 중 표시할 컨텐츠
+     */
+    private fun handleComponentLongPress(
+        component: SampleComponents.ComponentItem,
+        dragContent: @Composable () -> Unit
+    ) {
+        // DragState 초기화
+        val dragState = DragState(
+            componentName = component.name,
+            isDragging = true,
+            isDropped = false,
+            windowOffset = Offset.Zero,
+            layoutOffset = Offset.Zero,
+            remoteComposeDoc = component.remoteComposeDoc,
+            dragContent = dragContent
+        )
+        
+        _localState.update {
+            it.copy(dragState = dragState)
         }
     }
     
@@ -214,11 +273,12 @@ class EditorViewModel @Inject constructor(
  * 
  * UI에서 측정되는 값들을 담는 내부 상태입니다.
  * WidgetDocument는 Repository Flow에서 오고,
- * 이 값들은 UI 레이아웃 측정에서 옵니다.
+ * 이 값들은 UI 레이아웃 측정이나 사용자 인터랙션에서 옵니다.
  */
 private data class LocalEditorState(
     val canvasBounds: Rect? = null,
     val layoutBounds: Rect? = null,
+    val dragState: DragState? = null,
     val errorMessage: String? = null
 )
 

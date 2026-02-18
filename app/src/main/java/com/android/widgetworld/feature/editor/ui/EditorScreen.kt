@@ -73,6 +73,27 @@ fun EditorScreen(
                     .padding(16.dp)
                     .fillMaxWidth()
             )
+            
+            // 컴포넌트 팔레트
+            ComponentPalette(
+                onComponentLongPress = { component ->
+                    viewModel.handleEvent(
+                        EditorUiEvent.OnComponentLongPress(
+                            component = component,
+                            dragContent = {
+                                // Drag 중 표시할 컨텐츠 (간단한 프리뷰)
+                                Text(
+                                    text = "${component.emoji} ${component.name}",
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
+                        )
+                    )
+                },
+                modifier = Modifier
+                    .padding(horizontal = 16.dp)
+                    .fillMaxWidth()
+            )
 
             // Widget Canvas
             WidgetCanvas(
