@@ -1,0 +1,48 @@
+syntax = "proto3";
+
+option java_package = "com.android.widgetworld.proto";
+option java_multiple_files = true;
+
+package widgetworld;
+
+/**
+ * 레이아웃 타입 정의
+ * PRD 명세에 따라 MEDIUM, LARGE, FULL 세 가지 타입 지원
+ */
+enum LayoutType {
+  LAYOUT_TYPE_UNSPECIFIED = 0;  // Proto3 best practice: 0은 기본값
+  MEDIUM = 1;
+  LARGE = 2;
+  FULL = 3;
+}
+
+/**
+ * UI 컴포넌트의 위치 및 크기 정보
+ * Layout 기준 좌표계 사용
+ */
+message Position {
+  float x = 1;       // Layout 기준 x 좌표
+  float y = 2;       // Layout 기준 y 좌표
+  float width = 3;   // 컴포넌트 너비
+  float height = 4;  // 컴포넌트 높이
+}
+
+/**
+ * 개별 UI 컴포넌트
+ * RemoteCompose Document를 content로 저장
+ */
+message UiComponent {
+  string id = 1;           // 고유 식별자 (UUID 등)
+  string name = 2;         // 컴포넌트 이름/타입 (예: "Button", "Text")
+  Position position = 3;   // 위치 및 크기 정보
+  bytes content = 4;       // RemoteCompose Document (ByteArray)
+}
+
+/**
+ * 위젯 문서
+ * 하나의 위젯 디자인을 표현하는 최상위 모델
+ */
+message WidgetDocument {
+  LayoutType layout_type = 1;          // 레이아웃 타입
+  repeated UiComponent ui_list = 2;    // UI 컴포넌트 리스트
+}
