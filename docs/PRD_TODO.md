@@ -4,40 +4,40 @@
 > Goal: 사용자가 Drag&Drop으로 Android 위젯 UI를 직접 설계하는 앱
 
 ## 0) 범위/원칙 (PRD Guidance)
-- [ ] MVP 목표 재확인: Drag&Drop 기반 위젯 UI 에디터 + 위젯 렌더링 연결
-- [ ] Tech Stack 고정
-  - [ ] Platform: Android
-  - [ ] Language: Kotlin
-  - [ ] UI toolkit: Jetpack Compose (MaterialTheme 준수)
-  - [ ] Widget UI: RemoteCompose
-  - [ ] Architecture: MVVM + Clean Architecture (과용 금지), State Hosting 준수
-  - [ ] State Management: ViewModel + StateFlow
-  - [ ] DI: Hilt
-  - [ ] Storage: DataStore (Proto) (추후 Room 확장 가능)
-- [ ] DO
-  - [ ] Compose로 화면 구현, Google Material 디자인 가이드 준수
-  - [ ] 상태는 ViewModel 중심 (State Hosting 준수)
-  - [ ] UI State가 비대해질 시 ViewModel 분리
-  - [ ] 구조 단순 유지, MVP 중심
-  - [ ] 필요 라이브러리 미리 셋업
-- [ ] DO NOT
-  - [ ] 렌더링 엔진 과도하게 구현하지 않기
-  - [ ] 복잡한 Clean Architecture 과용하지 않기
-  - [ ] MVP 범위 외 기능 추가하지 않기
+- [x] MVP 목표 재확인: Drag&Drop 기반 위젯 UI 에디터 + 위젯 렌더링 연결
+- [x] Tech Stack 고정
+  - [x] Platform: Android
+  - [x] Language: Kotlin
+  - [x] UI toolkit: Jetpack Compose (MaterialTheme 준수)
+  - [x] Widget UI: RemoteCompose
+  - [x] Architecture: MVVM + Clean Architecture (과용 금지), State Hosting 준수
+  - [x] State Management: ViewModel + StateFlow
+  - [x] DI: Hilt
+  - [x] Storage: DataStore (Proto) (추후 Room 확장 가능)
+- [x] DO
+  - [x] Compose로 화면 구현, Google Material 디자인 가이드 준수
+  - [x] 상태는 ViewModel 중심 (State Hosting 준수)
+  - [x] UI State가 비대해질 시 ViewModel 분리
+  - [x] 구조 단순 유지, MVP 중심
+  - [x] 필요 라이브러리 미리 셋업
+- [x] DO NOT
+  - [x] 렌더링 엔진 과도하게 구현하지 않기
+  - [x] 복잡한 Clean Architecture 과용하지 않기
+  - [x] MVP 범위 외 기능 추가하지 않기
 
 ## 1) 프로젝트 기본 셋업 (Android/Compose/MVVM)
-- [ ] 모듈/패키지 구조 설계 (최소 단위로)
-  - [ ] `core` 공통 유틸/타입
-  - [ ] `domain` 유스케이스/도메인 모델(Proto wrapper 포함)
-  - [ ] `data` DataStore(Proto)/Repository
-  - [ ] `feature_editor` (Main/WidgetCanvas/DnD)
-  - [ ] `feature_widget` (위젯 렌더링/연동)
-- [ ] Hilt 셋업
-  - [ ] Application 클래스 생성 및 Hilt 설정
-  - [ ] DataStore/Repository/UseCase DI 모듈 구성
-- [ ] ViewModel + StateFlow 패턴 템플릿 확정
-  - [ ] UI State / UI Event / SideEffect 구분 기준 정리
-  - [ ] State Hosting 원칙(상태 소유/단방향 데이터 흐름) 적용
+- [x] 모듈/패키지 구조 설계 (최소 단위로)
+  - [x] `core` 공통 유틸/타입
+  - [x] `domain` 유스케이스/도메인 모델(Proto wrapper 포함)
+  - [x] `data` DataStore(Proto)/Repository
+  - [x] `feature_editor` (Main/WidgetCanvas/DnD)
+  - [x] `feature_widget` (위젯 렌더링/연동)
+- [x] Hilt 셋업
+  - [x] Application 클래스 생성 및 Hilt 설정
+  - [x] DataStore/Repository/UseCase DI 모듈 구성
+- [x] ViewModel + StateFlow 패턴 템플릿 확정
+  - [x] UI State / UI Event / SideEffect 구분 기준 정리
+  - [x] State Hosting 원칙(상태 소유/단방향 데이터 흐름) 적용
 
 ## 2) Core Domain Model (PRD Proto) 구현
 ### 2-1) Proto 스키마 정의
