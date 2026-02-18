@@ -197,12 +197,13 @@ fun createPosition(
 // ============================================================================
 
 /**
- * RemoteCompose Document를 명확하게 표현하기 위한 타입 별칭
- */
-typealias RemoteComposeDocument = ByteArray
-
-/**
  * Component ID를 명확하게 표현하기 위한 타입 별칭
  */
 typealias ComponentId = String
+
+/**
+ * Note: Component content는 ByteArray로 취급
+ * Domain 레이어는 직렬화 형식(RemoteCompose 등)을 알 필요 없음
+ * 렌더링 관련 세부사항은 feature_widget 레이어에서 처리
+ */
 
