@@ -2,6 +2,7 @@ package com.android.widgetworld.feature.editor.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
@@ -10,8 +11,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.platform.LocalDensity
@@ -25,19 +28,24 @@ import com.android.widgetworld.proto.LayoutType
 /**
  * Widget Canvas - 컴포넌트를 배치할 캔버스 영역
  * 
- * PRD 참조: 섭션 4-2 "WidgetCanvas(컨테이너) 구현"
+ * PRD 참조: 섹션 4-2 "WidgetCanvas(컨테이너) 구현"
  * 
  * Canvas는 전체 영역을 차지하며, 그 안에 Layout 영역이 표시됩니다.
  * - Layout 영역: 컴포넌트를 배치할 수 있는 영역 (흰색 배경)
  * - Layout 밖 영역: 배치 불가능한 영역 (회색 배경)
  * 
  * @param layoutType 현재 선택된 Layout 타입
+ * @param isDragging Drag 중인지 여부
+ * @param isValidDropPosition Drop 가능 여부
  * @param onCanvasBoundsChanged Canvas 경계가 변경될 때 호출되는 콜백
+ * @param onDragPositionChanged Drag 위치가 변경될 때 호출되는 콜백
  * @param modifier Modifier
  */
 @Composable
 fun WidgetCanvas(
     layoutType: LayoutType,
+    isDragging: Boolean = false,
+    isValidDropPosition: Boolean = false,
     onCanvasBoundsChanged: (Rect) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -68,7 +76,11 @@ fun WidgetCanvas(
             EmptyCanvasGuide()
         } else {
             // Layout 영역 표시
-            LayoutArea(layoutType = layoutType)
+            LayoutArea(
+                layoutType = layoutType,
+                isDragging = isDragging,
+                isValidDropPosition = isValidDropPosition
+            )
         }
     }
 }
@@ -107,26 +119,43 @@ private fun EmptyCanvasGuide() {
  * LayoutDimensions를 사용하여 크기를 결정합니다 (Single Source of Truth).
  * 
  * @param layoutType 현재 선택된 Layout 타입
+ * @param isDragging Drag 중인지 여부
+ * @param isValidDropPosition Drop 가능 여부 (Layout 영역 내부인지)
  */
 @Composable
 private fun LayoutArea(
-    layoutType: LayoutType
+    layoutType: LayoutType,
+    isDragging: Boolean = false,
+    isValidDropPosition: Boolean = false
 ) {
     // LayoutDimensions에서 크기 가져오기 (Single Source of Truth)
     val (width, height) = remember(layoutType) {
         LayoutDimensions.getSize(layoutType)
     }
     
+    // Drag 중일 때 배경색 변경
+    val backgroundColor = when {
+        !isDragging -> MaterialTheme.colorScheme.surface
+        isValidDropPosition -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+        else -> MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
+    }
+    
+    val borderColor = when {
+        !isDragging -> MaterialTheme.colorScheme.primary
+        isValidDropPosition -> MaterialTheme.colorScheme.primary
+        else -> MaterialTheme.colorScheme.error
+    }
+    
     Box(
         modifier = Modifier
             .size(width = width, height = height)
             .background(
-                color = MaterialTheme.colorScheme.surface,
+                color = backgroundColor,
                 shape = RoundedCornerShape(8.dp)
             )
             .border(
-                width = 2.dp,
-                color = MaterialTheme.colorScheme.primary,
+                width = if (isDragging) 3.dp else 2.dp,
+                color = borderColor,
                 shape = RoundedCornerShape(8.dp)
             )
             .padding(16.dp),
@@ -139,19 +168,41 @@ private fun LayoutArea(
             Text(
                 text = layoutType.name,
                 style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.primary
+                color = if (isDragging && !isValidDropPosition) {
+                    MaterialTheme.colorScheme.error
+                } else {
+                    MaterialTheme.colorScheme.primary
+                }
             )
             Text(
                 text = "${width.value.toInt()} × ${height.value.toInt()} dp",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = "컴포넌트 배치 영역",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            
+            if (isDragging) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = if (isValidDropPosition) {
+                        "✓ 배치 가능"
+                    } else {
+                        "✗ 배치 불가"
+                    },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = if (isValidDropPosition) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.error
+                    }
+                )
+            } else {
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "컴포넌트 배치 영역",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
     }
 }

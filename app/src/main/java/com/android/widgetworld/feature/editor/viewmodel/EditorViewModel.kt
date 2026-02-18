@@ -8,10 +8,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.widgetworld.core.model.LayoutDimensions
 import com.android.widgetworld.core.model.SampleComponents
+import com.android.widgetworld.domain.usecase.ConvertWindowToLayoutOffsetUseCase
 import com.android.widgetworld.domain.usecase.LoadWidgetDocumentUseCase
 import com.android.widgetworld.domain.usecase.SetLayoutTypeUseCase
+import com.android.widgetworld.domain.usecase.ValidateDropPositionUseCase
 import com.android.widgetworld.feature.editor.model.DragState
 import com.android.widgetworld.proto.LayoutType
+import com.android.widgetworld.proto.Position
 import com.android.widgetworld.proto.WidgetDocument
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -60,6 +63,35 @@ data class EditorUiState(
      */
     val isDragging: Boolean
         get() = dragState?.isDragging == true
+    
+    /**
+     * Drop 가능 여부 (Layout 영역 내부인지)
+     */
+    val isValidDropPosition: Boolean
+        get() {
+            if (dragState == null || layoutBounds == null) return false
+            
+            // Layout 좌표 기준으로 검증
+            val componentPos = Position.newBuilder()
+                .setX(dragState.layoutOffset.x)
+                .setY(dragState.layoutOffset.y)
+                .setWidth(50f) // MVP: 고정 크기 (4단계에서는 간단하게)
+                .setHeight(50f)
+                .build()
+            
+            val layoutPos = Position.newBuilder()
+                .setX(0f) // Layout 좌표계는 (0,0) 시작
+                .setY(0f)
+                .setWidth(layoutBounds.width)
+                .setHeight(layoutBounds.height)
+                .build()
+            
+            // ValidateDropPositionUseCase는 직접 호출하지 않고 여기서 간단히 체크
+            return componentPos.x >= 0 &&
+                    componentPos.y >= 0 &&
+                    componentPos.x + componentPos.width <= layoutPos.width &&
+                    componentPos.y + componentPos.height <= layoutPos.height
+        }
 }
 
 /**
@@ -88,6 +120,13 @@ sealed interface EditorUiEvent {
         val component: SampleComponents.ComponentItem,
         val dragContent: @Composable () -> Unit
     ) : EditorUiEvent
+    
+    /**
+     * Drag 종료
+     * 
+     * 사용자가 손가락을 뗐을 때 호출됩니다.
+     */
+    data object OnDragEnd : EditorUiEvent
 }
 
 /**
@@ -104,7 +143,9 @@ sealed interface EditorUiEvent {
 @HiltViewModel
 class EditorViewModel @Inject constructor(
     private val loadWidgetDocument: LoadWidgetDocumentUseCase,
-    private val setLayoutType: SetLayoutTypeUseCase
+    private val setLayoutType: SetLayoutTypeUseCase,
+    private val convertWindowToLayoutOffset: ConvertWindowToLayoutOffsetUseCase,
+    private val validateDropPosition: ValidateDropPositionUseCase
 ) : ViewModel() {
     
     // Canvas/Layout Bounds는 UI에서 측정되므로 별도 State로 관리
@@ -148,6 +189,9 @@ class EditorViewModel @Inject constructor(
             is EditorUiEvent.OnComponentLongPress -> {
                 handleComponentLongPress(event.component, event.dragContent)
             }
+            EditorUiEvent.OnDragEnd -> {
+                handleDragEnd()
+            }
         }
     }
     
@@ -180,6 +224,7 @@ class EditorViewModel @Inject constructor(
      * PRD 참조: 섹션 4-3-1 "Long Press Event → Drag 준비"
      * 
      * DragState를 초기화하고 Drag 준비 상태로 전환합니다.
+     * Drag 중 좌표는 UI에서 로컬 state로 관리됩니다.
      * 
      * @param component Long Press된 컴포넌트
      * @param dragContent Drag 중 표시할 컨텐츠
@@ -188,12 +233,12 @@ class EditorViewModel @Inject constructor(
         component: SampleComponents.ComponentItem,
         dragContent: @Composable () -> Unit
     ) {
-        // DragState 초기화
+        // DragState 초기화 (좌표는 UI에서 업데이트)
         val dragState = DragState(
             componentName = component.name,
             isDragging = true,
             isDropped = false,
-            windowOffset = Offset.Zero,
+            windowOffset = Offset.Zero,  // 초기값 (UI에서 즉시 업데이트됨)
             layoutOffset = Offset.Zero,
             remoteComposeDoc = component.remoteComposeDoc,
             dragContent = dragContent
@@ -201,6 +246,18 @@ class EditorViewModel @Inject constructor(
         
         _localState.update {
             it.copy(dragState = dragState)
+        }
+    }
+    
+    /**
+     * Drag 종료 처리
+     * 
+     * DragState를 초기화합니다.
+     * Drop 처리는 5단계에서 구현됩니다.
+     */
+    private fun handleDragEnd() {
+        _localState.update {
+            it.copy(dragState = null)
         }
     }
     
