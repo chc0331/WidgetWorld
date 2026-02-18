@@ -5,27 +5,40 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.android.widgetworld.feature.editor.viewmodel.EditorUiEvent
+import com.android.widgetworld.feature.editor.viewmodel.EditorViewModel
 
 /**
- * Editor 화면 (임시 구현)
- * 
- * PRD 참조: 섹션 4-2, 4-3
- * 
- * 2단계에서 본격적으로 구현됩니다.
- * 현재는 Navigation 테스트를 위한 placeholder입니다.
- * 
+ * Editor 화면
+ *
+ * PRD 참조: 섹션 4-2 "Layout 컴포넌트 선택 → WidgetCanvas 배치"
+ *
+ * Layout을 선택하고 컴포넌트를 배치할 수 있는 편집 화면입니다.
+ *
+ * State Hosting 원칙:
+ * - collectAsState()로 State 구독
+ * - Event는 ViewModel.handleEvent()로 전달
+ *
  * @param onNavigateBack 뒤로 가기 콜백
  * @param modifier Modifier
+ * @param viewModel EditorViewModel (Hilt 자동 주입)
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditorScreen(
     onNavigateBack: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    viewModel: EditorViewModel = hiltViewModel()
 ) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val density = LocalDensity.current
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -49,20 +62,37 @@ fun EditorScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
         ) {
-            Text(
-                text = "Editor 화면",
-                style = MaterialTheme.typography.headlineMedium
+            // Layout 선택 탭
+            LayoutTab(
+                selectedLayoutType = uiState.layoutType,
+                onLayoutTypeSelected = { layoutType ->
+                    viewModel.handleEvent(EditorUiEvent.OnLayoutTypeSelected(layoutType))
+                },
+                modifier = Modifier
+                    .padding(16.dp)
+                    .fillMaxWidth()
             )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "2단계에서 구현됩니다",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+
+            // Widget Canvas
+            WidgetCanvas(
+                layoutType = uiState.layoutType,
+                onCanvasBoundsChanged = { bounds ->
+                    viewModel.handleCanvasBoundsChanged(bounds, density)
+                },
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
             )
+        }
+
+        // 에러 메시지 표시 (Snackbar)
+        uiState.errorMessage?.let { message ->
+            Snackbar(
+                modifier = Modifier.padding(16.dp)
+            ) {
+                Text(message)
+            }
         }
     }
 }
