@@ -44,35 +44,35 @@
 
 ## 2) Core Domain Model (PRD Proto) 구현
 ### 2-1) Proto 스키마 정의
-- [ ] `LayoutType`
-  - [ ] `MEDIUM = 1`
-  - [ ] `LARGE = 2`
-  - [ ] `FULL = 3`
-- [ ] `WidgetDocument`
-  - [ ] `LayoutType layout_type = 1`
-  - [ ] `repeated UiComponent ui_list = 2`
-- [ ] `UiComponent`
-  - [ ] `string id = 1`
-  - [ ] `string name = 2`
-  - [ ] `Position position = 3`
-  - [ ] `bytes content = 4` (RemoteCompose Document ByteArray)
-- [ ] `Position`
-  - [ ] `float x = 1`
-  - [ ] `float y = 2`
-  - [ ] `float width = 3`
-  - [ ] `float height = 4`
+- [x] `LayoutType`
+  - [x] `MEDIUM = 1`
+  - [x] `LARGE = 2`
+  - [x] `FULL = 3`
+- [x] `WidgetDocument`
+  - [x] `LayoutType layout_type = 1`
+  - [x] `repeated UiComponent ui_list = 2`
+- [x] `UiComponent`
+  - [x] `string id = 1`
+  - [x] `string name = 2`
+  - [x] `Position position = 3`
+  - [x] `bytes content = 4` (RemoteCompose Document ByteArray)
+- [x] `Position`
+  - [x] `float x = 1`
+  - [x] `float y = 2`
+  - [x] `float width = 3`
+  - [x] `float height = 4`
 
 ### 2-2) Proto 생성/빌드 파이프라인
-- [ ] protobuf 설정 및 Kotlin 코드 생성 확인
-- [ ] 생성된 클래스/패키지 네이밍 점검
+- [x] protobuf 설정 및 Kotlin 코드 생성 확인
+- [x] 생성된 클래스/패키지 네이밍 점검
 
 ### 2-3) 최소 UseCase/Policy 정의
-- [ ] `LoadWidgetDocument`
-- [ ] `SaveWidgetDocument`
-- [ ] `SetLayoutType`
-- [ ] `AddUiComponent`
-- [ ] `ValidateDropPosition` (레이아웃 영역 drop 가능 여부)
-- [ ] `ConvertWindowToLayoutOffset` (좌표 변환 정책)
+- [x] `LoadWidgetDocument`
+- [x] `SaveWidgetDocument`
+- [x] `SetLayoutType`
+- [x] `AddUiComponent`
+- [x] `ValidateDropPosition` (레이아웃 영역 drop 가능 여부)
+- [x] `ConvertWindowToLayoutOffset` (좌표 변환 정책)
 
 ## 3) Storage: DataStore(Proto)
 - [ ] Proto DataStore 구현
