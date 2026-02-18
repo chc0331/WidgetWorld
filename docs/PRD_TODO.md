@@ -35,9 +35,12 @@
 - [x] Hilt 셋업
   - [x] Application 클래스 생성 및 Hilt 설정
   - [x] DataStore/Repository/UseCase DI 모듈 구성
-- [x] ViewModel + StateFlow 패턴 템플릿 확정
-  - [x] UI State / UI Event / SideEffect 구분 기준 정리
-  - [x] State Hosting 원칙(상태 소유/단방향 데이터 흐름) 적용
+- [x] ViewModel + StateFlow 패턴 가이드 확정
+  - [ ] (섹션 4에서 구현) State Hosting 원칙 준수
+    - [ ] UI State: data class, ViewModel에서만 변경
+    - [ ] UI Event: sealed interface, Composable → ViewModel
+    - [ ] Side Effect: Channel, 일회성 이벤트
+    - [ ] 단방향 데이터 흐름: Event → ViewModel → State → UI
 
 ## 2) Core Domain Model (PRD Proto) 구현
 ### 2-1) Proto 스키마 정의
@@ -87,6 +90,18 @@
 - [ ] Main 화면 UI 구성
   - [ ] 편집 진입 CTA (새 위젯/편집)
   - [ ] 에디터 화면으로 네비게이션 연결
+- [ ] Main 화면 ViewModel 구현 (State Hosting 원칙 준수)
+  - [ ] UI State 정의 (data class, 불변)
+  - [ ] UI Event 정의 (sealed interface)
+  - [ ] Side Effect 정의 (sealed interface, 필요시)
+  - [ ] ViewModel 구현 (@HiltViewModel)
+    - [ ] StateFlow로 State 노출
+    - [ ] handleEvent() 메서드로 이벤트 처리
+    - [ ] State는 copy()로만 업데이트
+  - [ ] Composable 연결
+    - [ ] collectAsState()로 State 구독
+    - [ ] Event 발행은 ViewModel.handleEvent() 호출
+    - [ ] LaunchedEffect로 Side Effect 처리
 
 ### 4-2) Layout 컴포넌트 선택 → WidgetCanvas 배치 (PRD 5-2)
 - [ ] Layout Tab/UI 구성
@@ -95,9 +110,31 @@
 - [ ] WidgetCanvas(컨테이너) 구현
   - [ ] Layout 영역(드롭 가능)과 Layout 밖 영역(드롭 불가) 시각적으로 구분
   - [ ] Layout 추가 시 `WidgetDocument.layout_type` 업데이트
-  - [ ] “컨테이너 역할” 가이드(빈 상태) 제공
+  - [ ] "컨테이너 역할" 가이드(빈 상태) 제공
 
 ### 4-3) UI Component를 Layout 영역에 Drag&Drop으로 추가 (PRD 5-3)
+- [ ] Editor(Canvas + DnD) ViewModel 구현 (State Hosting 원칙 준수)
+  - [ ] UI State 정의 (data class, 불변)
+    - [ ] `widgetDocument: WidgetDocument`
+    - [ ] `dragState: DragState?` (Dragging 중인 상태)
+    - [ ] `canvasBounds: Rect?`
+    - [ ] `layoutBounds: Rect?`
+  - [ ] UI Event 정의 (sealed interface)
+    - [ ] `OnLayoutTypeSelected(layoutType: LayoutType)`
+    - [ ] `OnComponentLongPress(component, remoteComposeDoc)`
+    - [ ] `OnDragPositionChanged(windowOffset, layoutOffset)`
+    - [ ] `OnDrop(layoutOffset, remoteComposeDoc)`
+  - [ ] Side Effect 정의 (sealed interface, 필요시)
+  - [ ] ViewModel 구현 (@HiltViewModel)
+    - [ ] StateFlow로 State 노출
+    - [ ] handleEvent() 메서드로 이벤트 처리
+    - [ ] State는 copy()로만 업데이트
+    - [ ] Repository와 연동하여 WidgetDocument 저장/로드
+  - [ ] Composable 연결
+    - [ ] collectAsState()로 State 구독
+    - [ ] Event 발행은 ViewModel.handleEvent() 호출
+    - [ ] LaunchedEffect로 Side Effect 처리
+
 #### 4-3-0) 컴포넌트 팔레트/리스트
 - [ ] UI Component 목록 UI 구성
   - [ ] 각 항목 long press 가능 처리
