@@ -106,6 +106,53 @@
   - [x] 추가 Repository 생성 가능: `WidgetListRepository` (목록 관리용)
   - [x] DataStore 직접 의존 회피, 주입받아 사용 (LocalDataSource 추상화 완료)
 
+### 향후 확장: 하이브리드 저장소 (섹션 6 또는 별도)
+- [x] 인터페이스 설계 완료
+  - [x] `WidgetDocumentHistoryItem` 도메인 모델 정의
+  - [x] Repository에 히스토리 메서드 시그니처 추가 (undo/redo/observeHistory/restore)
+  - [x] 기본 구현 제공 (NotImplementedError 또는 빈 Flow)
+- [ ] Room Database 설계 및 구현
+  - [ ] WidgetDocumentEntity 정의
+  - [ ] WidgetDocumentDao 정의 (CRUD + 히스토리 조회)
+  - [ ] WidgetWorldDatabase 생성
+  - [ ] Migration 전략 수립
+- [ ] 하이브리드 DataSource 구현
+  - [ ] WidgetRoomSource (Room 기반 LocalDataSource 구현)
+  - [ ] InMemoryHistorySource (Undo/Redo 스택, 최근 50개)
+  - [ ] DataStoreSyncer (DataStore ↔ Room 백그라운드 동기화)
+- [ ] Repository 하이브리드 로직 구현
+  - [ ] updateWidgetDocument에 Undo 스택 푸시 연동
+  - [ ] undo/redo 메서드 실제 구현 (메모리 스택 사용)
+  - [ ] 백그라운드 Room 동기화 (debounce 적용)
+  - [ ] 초기 로드 시 DataStore ↔ Room 동기화 검증
+- [ ] 히스토리 UseCase 추가
+  - [ ] UndoWidgetDocumentUseCase
+  - [ ] RedoWidgetDocumentUseCase
+  - [ ] LoadHistoryListUseCase
+  - [ ] RestoreFromHistoryUseCase
+  - [ ] SaveCurrentAsHistoryUseCase (수동 저장)
+- [ ] 썸네일 생성 및 관리
+  - [ ] Canvas 스크린샷 캡처 유틸
+  - [ ] 썸네일 이미지 파일 저장
+  - [ ] 썸네일 경로를 히스토리에 연결
+- [ ] 히스토리 UI 구현
+  - [ ] Undo/Redo 버튼 (Editor 화면)
+  - [ ] 히스토리 목록 화면 (썸네일 + 타임스탬프)
+  - [ ] 히스토리 복원 다이얼로그
+
+**하이브리드 저장소 아키텍처 전략**:
+- **DataStore**: 현재 작업 중인 문서 캐시 (빠른 읽기/쓰기, UI 즉시 반영)
+- **Room**: 영속 저장소 + 히스토리 관리 (썸네일 포함, 검색/필터 가능)
+- **Memory Stack**: Undo/Redo 스택 (최근 50개, 메모리 내에서 즉시 처리)
+- **Syncer**: DataStore ↔ Room 백그라운드 동기화 (debounce 1초)
+
+**하이브리드 데이터 흐름**:
+1. **편집 작업**: Memory Stack 푸시 → DataStore 즉시 저장 → UI 즉시 반영 → Room 백그라운드 동기화
+2. **Undo/Redo**: Memory Stack pop/push → DataStore 복원 → UI 즉시 반영
+3. **앱 시작**: DataStore에서 로드 (빠름) → 백그라운드로 Room과 동기화 검증
+4. **히스토리 조회**: Room에서 목록 로드 (썸네일 포함)
+5. **히스토리 복원**: Room에서 특정 버전 로드 → DataStore 업데이트 → UI 반영
+
 ## 4) UX Flow (PRD 5)
 
 ### 4-1) Main 화면 (PRD 5-1)
