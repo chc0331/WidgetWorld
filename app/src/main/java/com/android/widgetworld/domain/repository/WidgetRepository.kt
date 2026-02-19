@@ -1,6 +1,7 @@
 package com.android.widgetworld.domain.repository
 
 import com.android.widgetworld.domain.model.WidgetDocumentHistoryItem
+import com.android.widgetworld.proto.UiComponent
 import com.android.widgetworld.proto.WidgetDocument
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
@@ -66,6 +67,32 @@ interface WidgetRepository {
      * @return 성공 시 Result.success(WidgetDocument), 실패 시 Result.failure(Exception)
      */
     suspend fun getWidgetDocument(): Result<WidgetDocument>
+    
+    /**
+     * UI 컴포넌트를 WidgetDocument에 추가합니다.
+     * 
+     * PRD 참조: 섹션 4-3-3 "UiComponent 생성 및 문서 저장"
+     * 
+     * Drop 이벤트 발생 시 호출되며, ui_list에 컴포넌트를 추가합니다.
+     * 
+     * @param component 추가할 UI 컴포넌트
+     * @return 성공 시 Result.success(Unit), 실패 시 Result.failure(Exception)
+     * 
+     * 사용 예시:
+     * ```
+     * val component = UiComponent.newBuilder()
+     *     .setId(UUID.randomUUID().toString())
+     *     .setName("Button")
+     *     .setPosition(position)
+     *     .setContent(remoteComposeDoc)
+     *     .build()
+     * 
+     * repository.addUiComponent(component)
+     *     .onSuccess { /* UI 자동 업데이트됨 */ }
+     *     .onFailure { exception -> /* 에러 처리 */ }
+     * ```
+     */
+    suspend fun addUiComponent(component: UiComponent): Result<Unit>
     
     // ============================================================================
     // 향후 구현: 히스토리 관리 (하이브리드 저장소)

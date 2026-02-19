@@ -110,8 +110,16 @@ fun EditorScreen(
                     onDragStart = dragHandler.onDragStart,
                     onDrag = dragHandler.onDrag,
                     onDragEnd = {
+                        // Drop 가능 여부 확인
+                        if (uiState.isValidDropPosition) {
+                            // Drop 가능 - OnDrop 이벤트 발행
+                            viewModel.handleEvent(EditorUiEvent.OnDrop)
+                        } else {
+                            // Drop 불가 - OnDragEnd만 발행
+                            viewModel.handleEvent(EditorUiEvent.OnDragEnd)
+                        }
+                        // 로컬 state 초기화
                         dragHandler.onDragEnd()
-                        viewModel.handleEvent(EditorUiEvent.OnDragEnd)
                     },
                     isExpanded = isComponentPaletteExpanded,
                     onToggleExpand = { isComponentPaletteExpanded = !isComponentPaletteExpanded },

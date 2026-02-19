@@ -3,6 +3,7 @@ package com.android.widgetworld.data.repository
 import android.util.Log
 import com.android.widgetworld.data.datasource.WidgetDocumentLocalDataSource
 import com.android.widgetworld.domain.repository.WidgetRepository
+import com.android.widgetworld.proto.UiComponent
 import com.android.widgetworld.proto.WidgetDocument
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
@@ -166,6 +167,37 @@ class WidgetRepositoryImpl @Inject constructor(
         } catch (e: Exception) {
             // 모든 예외를 Result.failure로 변환
             Log.e(TAG, "getWidgetDocument: 조회 실패", e)
+            Result.failure(e)
+        }
+    }
+    
+    /**
+     * UI 컴포넌트를 WidgetDocument에 추가합니다.
+     * 
+     * PRD 참조: 섹션 4-3-3 "UiComponent 생성 및 문서 저장"
+     * 
+     * updateWidgetDocument를 사용하여 ui_list에 컴포넌트를 추가합니다.
+     * 원자적으로 처리되어 race condition을 방지합니다.
+     * 
+     * @param component 추가할 UI 컴포넌트
+     * @return 성공 시 Result.success(Unit), 실패 시 Result.failure(Exception)
+     */
+    override suspend fun addUiComponent(component: UiComponent): Result<Unit> {
+        return try {
+            Log.d(TAG, "addUiComponent: 컴포넌트 추가 시작 (id=${component.id}, name=${component.name})")
+            
+            // updateWidgetDocument를 사용하여 ui_list에 추가
+            localDataSource.updateCurrentDocument { currentDocument ->
+                currentDocument.toBuilder()
+                    .addUiList(component)
+                    .build()
+            }
+            
+            Log.d(TAG, "addUiComponent: 컴포넌트 추가 성공")
+            Result.success(Unit)
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "addUiComponent: 컴포넌트 추가 실패", e)
             Result.failure(e)
         }
     }

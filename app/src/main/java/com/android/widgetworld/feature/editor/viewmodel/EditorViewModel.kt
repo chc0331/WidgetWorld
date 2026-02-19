@@ -1,5 +1,6 @@
 package com.android.widgetworld.feature.editor.viewmodel
 
+import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
@@ -8,14 +9,18 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.widgetworld.core.model.LayoutDimensions
 import com.android.widgetworld.core.model.SampleComponents
+import com.android.widgetworld.domain.usecase.AddUiComponentUseCase
 import com.android.widgetworld.domain.usecase.ConvertWindowToLayoutOffsetUseCase
+import com.android.widgetworld.domain.usecase.GetWidgetDocumentDebugUseCase
 import com.android.widgetworld.domain.usecase.LoadWidgetDocumentUseCase
 import com.android.widgetworld.domain.usecase.SetLayoutTypeUseCase
 import com.android.widgetworld.domain.usecase.ValidateDropPositionUseCase
 import com.android.widgetworld.feature.editor.model.DragState
 import com.android.widgetworld.proto.LayoutType
 import com.android.widgetworld.proto.Position
+import com.android.widgetworld.proto.UiComponent
 import com.android.widgetworld.proto.WidgetDocument
+import com.google.protobuf.kotlin.toByteString
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -24,6 +29,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.util.UUID
 import javax.inject.Inject
 
 /**
@@ -125,8 +131,19 @@ sealed interface EditorUiEvent {
      * Drag 종료
      * 
      * 사용자가 손가락을 뗐을 때 호출됩니다.
+     * Drop 가능 여부를 확인하고, 가능하면 OnDrop 이벤트로 전환됩니다.
      */
     data object OnDragEnd : EditorUiEvent
+    
+    /**
+     * Drop 처리
+     * 
+     * PRD 참조: 섹션 4-3-3 "Drop Event"
+     * 
+     * Drag 종료 시 유효한 위치에서 Drop되었을 때 호출됩니다.
+     * UI 컴포넌트를 생성하고 WidgetDocument에 저장합니다.
+     */
+    data object OnDrop : EditorUiEvent
 }
 
 /**
@@ -145,8 +162,14 @@ class EditorViewModel @Inject constructor(
     private val loadWidgetDocument: LoadWidgetDocumentUseCase,
     private val setLayoutType: SetLayoutTypeUseCase,
     private val convertWindowToLayoutOffset: ConvertWindowToLayoutOffsetUseCase,
-    private val validateDropPosition: ValidateDropPositionUseCase
+    private val validateDropPosition: ValidateDropPositionUseCase,
+    private val addUiComponent: AddUiComponentUseCase,
+    private val getWidgetDocumentDebug: GetWidgetDocumentDebugUseCase
 ) : ViewModel() {
+    
+    companion object {
+        private const val TAG = "EditorViewModel"
+    }
     
     // Canvas/Layout Bounds는 UI에서 측정되므로 별도 State로 관리
     private val _localState = MutableStateFlow(LocalEditorState())
@@ -191,6 +214,9 @@ class EditorViewModel @Inject constructor(
             }
             EditorUiEvent.OnDragEnd -> {
                 handleDragEnd()
+            }
+            EditorUiEvent.OnDrop -> {
+                handleDrop()
             }
         }
     }
@@ -253,11 +279,100 @@ class EditorViewModel @Inject constructor(
      * Drag 종료 처리
      * 
      * DragState를 초기화합니다.
-     * Drop 처리는 5단계에서 구현됩니다.
+     * Drop 가능 여부를 확인하여 Drop 이벤트로 전환할 수 있습니다.
      */
     private fun handleDragEnd() {
         _localState.update {
             it.copy(dragState = null)
+        }
+    }
+    
+    /**
+     * Drop 처리
+     * 
+     * PRD 참조: 섹션 4-3-3 "Drop Event → UiComponent 생성 및 문서 저장"
+     * 
+     * Drag 종료 시 유효한 위치에 Drop되었을 때 호출됩니다.
+     * UI 컴포넌트를 생성하고 WidgetDocument에 저장합니다.
+     * 
+     * 처리 과정:
+     * 1. Drop 가능 여부 최종 확인 (Layout 영역 내부인지)
+     * 2. UiComponent 생성 (id, name, position, content)
+     * 3. AddUiComponentUseCase를 통해 WidgetDocument에 저장
+     * 4. 저장 성공 시 DragState 초기화
+     * 5. 저장 실패 시 에러 메시지 표시
+     */
+    private fun handleDrop() {
+        val currentDragState = _localState.value.dragState
+        val currentLayoutBounds = _localState.value.layoutBounds
+        
+        // Drag 상태나 Layout 경계가 없으면 무시
+        if (currentDragState == null || currentLayoutBounds == null) {
+            return
+        }
+        
+        // Drop 가능 여부 확인 (Layout 영역 내부인지)
+        val componentPos = Position.newBuilder()
+            .setX(currentDragState.layoutOffset.x)
+            .setY(currentDragState.layoutOffset.y)
+            .setWidth(50f) // MVP: 고정 크기
+            .setHeight(50f)
+            .build()
+        
+        val layoutPos = Position.newBuilder()
+            .setX(0f)
+            .setY(0f)
+            .setWidth(currentLayoutBounds.width)
+            .setHeight(currentLayoutBounds.height)
+            .build()
+        
+        val isValidPosition = validateDropPosition(componentPos, layoutPos)
+        
+        if (!isValidPosition) {
+            // Drop 불가능한 위치 - DragState만 초기화하고 저장하지 않음
+            _localState.update {
+                it.copy(
+                    dragState = null,
+                    errorMessage = "Layout 영역 내부에 배치해주세요"
+                )
+            }
+            return
+        }
+        
+        // UiComponent 생성
+        val component = UiComponent.newBuilder()
+            .setId(UUID.randomUUID().toString())
+            .setName(currentDragState.componentName)
+            .setPosition(componentPos)
+            .setContent(currentDragState.remoteComposeDoc.toByteString())
+            .build()
+        
+        // AddUiComponentUseCase를 통해 저장
+        viewModelScope.launch {
+            addUiComponent(component)
+                .onSuccess {
+                    // 저장 성공 - DragState 초기화, Flow가 자동으로 업데이트됨
+                    _localState.update {
+                        it.copy(
+                            dragState = null,
+                            errorMessage = null
+                        )
+                    }
+                    
+                    // 🔍 DEBUG: WidgetDocument 내용 확인
+                    Log.d(TAG, "handleDrop: 컴포넌트 저장 성공, DataStore 내용 확인 중...")
+                    getWidgetDocumentDebug()
+                }
+                .onFailure { exception ->
+                    // 저장 실패 - 에러 메시지 표시
+                    Log.e(TAG, "handleDrop: 컴포넌트 저장 실패", exception)
+                    _localState.update {
+                        it.copy(
+                            dragState = null,
+                            errorMessage = "컴포넌트 저장 실패: ${exception.message}"
+                        )
+                    }
+                }
         }
     }
     

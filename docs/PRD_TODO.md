@@ -156,103 +156,109 @@
 ## 4) UX Flow (PRD 5)
 
 ### 4-1) Main 화면 (PRD 5-1)
-- [ ] Main 화면 UI 구성
-  - [ ] 편집 진입 CTA (새 위젯/편집)
-  - [ ] 에디터 화면으로 네비게이션 연결
-- [ ] Main 화면 ViewModel 구현 (State Hosting 원칙 준수)
-  - [ ] UI State 정의 (data class, 불변)
-  - [ ] UI Event 정의 (sealed interface)
-  - [ ] Side Effect 정의 (sealed interface, 필요시)
-  - [ ] ViewModel 구현 (@HiltViewModel)
-    - [ ] StateFlow로 State 노출
-    - [ ] handleEvent() 메서드로 이벤트 처리
-    - [ ] State는 copy()로만 업데이트
-  - [ ] Composable 연결
-    - [ ] collectAsState()로 State 구독
-    - [ ] Event 발행은 ViewModel.handleEvent() 호출
-    - [ ] LaunchedEffect로 Side Effect 처리
+- [x] Main 화면 UI 구성
+  - [x] 편집 진입 CTA (새 위젯/편집)
+  - [x] 에디터 화면으로 네비게이션 연결
+- [x] Main 화면 ViewModel 구현 (State Hosting 원칙 준수)
+  - [x] UI State 정의 (data class, 불변)
+  - [x] UI Event 정의 (sealed interface)
+  - [x] Side Effect 정의 (sealed interface, 필요시)
+  - [x] ViewModel 구현 (@HiltViewModel)
+    - [x] StateFlow로 State 노출
+    - [x] handleEvent() 메서드로 이벤트 처리
+    - [x] State는 copy()로만 업데이트
+  - [x] Composable 연결
+    - [x] collectAsState()로 State 구독
+    - [x] Event 발행은 ViewModel.handleEvent() 호출
+    - [x] LaunchedEffect로 Side Effect 처리
 
 ### 4-2) Layout 컴포넌트 선택 → WidgetCanvas 배치 (PRD 5-2)
-- [ ] Layout Tab/UI 구성
-  - [ ] LayoutType 선택 UI 제공 (MEDIUM/LARGE/FULL)
-  - [ ] Layout 클릭 시 Canvas에 Layout 컨테이너 추가
-- [ ] WidgetCanvas(컨테이너) 구현
-  - [ ] Layout 영역(드롭 가능)과 Layout 밖 영역(드롭 불가) 시각적으로 구분
-  - [ ] Layout 추가 시 `WidgetDocument.layout_type` 업데이트
-  - [ ] "컨테이너 역할" 가이드(빈 상태) 제공
+- [x] Layout Tab/UI 구성
+  - [x] LayoutType 선택 UI 제공 (MEDIUM/LARGE/FULL)
+  - [x] Layout 클릭 시 Canvas에 Layout 컨테이너 추가
+  - [x] 접기/펼치기 기능 추가 (Canvas 시인성 향상)
+- [x] WidgetCanvas(컨테이너) 구현
+  - [x] Layout 영역(드롭 가능)과 Layout 밖 영역(드롭 불가) 시각적으로 구분
+  - [x] Layout 추가 시 `WidgetDocument.layout_type` 업데이트
+  - [x] "컨테이너 역할" 가이드(빈 상태) 제공
 
 ### 4-3) UI Component를 Layout 영역에 Drag&Drop으로 추가 (PRD 5-3)
-- [ ] Editor(Canvas + DnD) ViewModel 구현 (State Hosting 원칙 준수)
-  - [ ] UI State 정의 (data class, 불변)
-    - [ ] `widgetDocument: WidgetDocument`
-    - [ ] `dragState: DragState?` (Dragging 중인 상태)
-    - [ ] `canvasBounds: Rect?`
-    - [ ] `layoutBounds: Rect?`
-  - [ ] UI Event 정의 (sealed interface)
-    - [ ] `OnLayoutTypeSelected(layoutType: LayoutType)`
-    - [ ] `OnComponentLongPress(component, remoteComposeDoc)`
-    - [ ] `OnDragPositionChanged(windowOffset, layoutOffset)`
-    - [ ] `OnDrop(layoutOffset, remoteComposeDoc)`
-  - [ ] Side Effect 정의 (sealed interface, 필요시)
-  - [ ] ViewModel 구현 (@HiltViewModel)
-    - [ ] StateFlow로 State 노출
-    - [ ] handleEvent() 메서드로 이벤트 처리
-    - [ ] State는 copy()로만 업데이트
-    - [ ] Repository와 연동하여 WidgetDocument 저장/로드
-  - [ ] Composable 연결
-    - [ ] collectAsState()로 State 구독
-    - [ ] Event 발행은 ViewModel.handleEvent() 호출
-    - [ ] LaunchedEffect로 Side Effect 처리
+- [x] Editor(Canvas + DnD) ViewModel 구현 (State Hosting 원칙 준수)
+  - [x] UI State 정의 (data class, 불변)
+    - [x] `widgetDocument: WidgetDocument`
+    - [x] `dragState: DragState?` (Dragging 중인 상태)
+    - [x] `canvasBounds: Rect?`
+    - [x] `layoutBounds: Rect?`
+  - [x] UI Event 정의 (sealed interface)
+    - [x] `OnLayoutTypeSelected(layoutType: LayoutType)`
+    - [x] `OnComponentLongPress(component, remoteComposeDoc)`
+    - [x] ~~`OnDragPositionChanged(windowOffset, layoutOffset)`~~ (로컬 state로 최적화)
+    - [ ] `OnDrop(layoutOffset, remoteComposeDoc)` (4-3-3에서 구현 예정)
+  - [x] Side Effect 정의 (sealed interface, 필요시)
+  - [x] ViewModel 구현 (@HiltViewModel)
+    - [x] StateFlow로 State 노출
+    - [x] handleEvent() 메서드로 이벤트 처리
+    - [x] State는 copy()로만 업데이트
+    - [x] Repository와 연동하여 WidgetDocument 저장/로드
+  - [x] Composable 연결
+    - [x] collectAsState()로 State 구독
+    - [x] Event 발행은 ViewModel.handleEvent() 호출
+    - [x] LaunchedEffect로 Side Effect 처리
 
 #### 4-3-0) 컴포넌트 팔레트/리스트
-- [ ] UI Component 목록 UI 구성
-  - [ ] 각 항목 long press 가능 처리
-  - [ ] 항목별 RemoteCompose Document(ByteArray) 준비/획득 방식 정의
+- [x] UI Component 목록 UI 구성
+  - [x] 각 항목 long press 가능 처리
+  - [x] 항목별 RemoteCompose Document(ByteArray) 준비/획득 방식 정의
+  - [x] 접기/펼치기 기능 추가 (Canvas 시인성 향상)
+  - [x] TODO: 2-depth 구조 주석 추가 (향후 개선 예정)
 
 #### 4-3-1) Long Press Event (PRD 5-3-1)
-- [ ] Long press 시 RemoteCompose Document(ByteArray) 추출 (PRD 5-3-1-1)
-- [ ] Drag 준비: Drag State 정의 및 초기화 (PRD 5-3-1-2)
-  - [ ] Drag State 필드 정의 (PRD 명세)
-    - [ ] Drag 중인지 여부 `isDragging: Boolean`
-    - [ ] Drop 여부 `isDropped: Boolean`
-    - [ ] Window 기준 Drag 포지션 `windowOffset: Offset`
-    - [ ] Layout 기준 Drag 포지션 `layoutOffset: Offset`
-    - [ ] RemoteCompose Document `remoteComposeDoc: ByteArray`
-    - [ ] Drag 컨텐츠 `dragContent: @Composable () -> Unit`
+- [x] Long press 시 RemoteCompose Document(ByteArray) 추출 (PRD 5-3-1-1)
+- [x] Drag 준비: Drag State 정의 및 초기화 (PRD 5-3-1-2)
+  - [x] Drag State 필드 정의 (PRD 명세)
+    - [x] Drag 중인지 여부 `isDragging: Boolean`
+    - [x] Drop 여부 `isDropped: Boolean`
+    - [x] Window 기준 Drag 포지션 `windowOffset: Offset`
+    - [x] Layout 기준 Drag 포지션 `layoutOffset: Offset`
+    - [x] RemoteCompose Document `remoteComposeDoc: ByteArray`
+    - [x] Drag 컨텐츠 `dragContent: @Composable () -> Unit`
 
 #### 4-3-2) Dragging Event (PRD 5-3-2)
-- [ ] Window 기준 x,y 좌표 업데이트 (PRD 5-3-2-1)
-  - [ ] 현재 x,y가 Widget Canvas 영역 내인지 체크 로직 구현 (PRD bullet)
-    - [ ] Canvas bounds 계산/갱신(리컴포지션/레이아웃 변화 대응)
-    - [ ] Layout bounds 계산/갱신
-    - [ ] in/out 판정 결과를 Drag State에 반영
-  - [ ] Drop이 될 수 있는 영역을 미리 표시 (PRD bullet)
-    - [ ] Layout 영역 하이라이트
-    - [ ] Drop 불가 시(레이아웃 밖) 경고 표시 정책과 연동
-- [ ] Layout 기준 x,y 좌표 업데이트 (PRD 5-3-2-2)
-  - [ ] Window → Layout 좌표 변환 함수 구현
-- [ ] Drag 중 시각 효과 (PRD 5-3-2-3)
-  - [ ] Drag 컨텐츠(원본) 투명 처리
-  - [ ] Layout 내부에 Drop 위치 프리뷰 표시
+- [x] Window 기준 x,y 좌표 업데이트 (PRD 5-3-2-1)
+  - [x] 현재 x,y가 Widget Canvas 영역 내인지 체크 로직 구현 (PRD bullet)
+    - [x] Canvas bounds 계산/갱신(리컴포지션/레이아웃 변화 대응)
+    - [x] Layout bounds 계산/갱신
+    - [x] in/out 판정 결과를 Drag State에 반영
+  - [x] Drop이 될 수 있는 영역을 미리 표시 (PRD bullet)
+    - [x] Layout 영역 하이라이트 (배경색 변경)
+    - [x] Drop 불가 시(레이아웃 밖) 경고 표시 ("✗ 배치 불가")
+- [x] Layout 기준 x,y 좌표 업데이트 (PRD 5-3-2-2)
+  - [x] Window → Layout 좌표 변환 함수 구현 (ConvertWindowToLayoutOffsetUseCase)
+- [x] Drag 중 시각 효과 (PRD 5-3-2-3)
+  - [x] Drag 컨텐츠 표시 (DragOverlay 구현)
+  - [x] 성능 최적화 (rememberDragStateHandler로 로컬 state 관리)
+  - [ ] Layout 내부에 Drop 위치 프리뷰 표시 (향후 개선)
 
 #### 4-3-3) Drop Event (PRD 5-3-3)
-- [ ] Layout 영역 Drop 가능 여부 최종 체크 (PRD 5-3-3-1)
-- [ ] Window 기준 x,y 좌표 기준으로 Drop 처리 (PRD 5-3-3-2)
-- [ ] UiComponent 생성 및 문서 저장 (PRD 5-3-3-3)
-  - [ ] `UiComponent` 생성 규칙 결정
-    - [ ] `id` 생성 (UUID 등)
-    - [ ] `name` 매핑 (컴포넌트 타입명 등)
-  - [ ] `Position` 채우기
-    - [ ] `x`,`y`: Layout 기준 좌표
-    - [ ] `width`,`height`: 초기값 정책(컴포넌트별/기본값) 결정
-  - [ ] `content = remoteComposeDoc(ByteArray)` 저장
-  - [ ] `WidgetDocument.ui_list`에 append
-  - [ ] DataStore 저장 트리거 (drop 직후)
+- [x] Layout 영역 Drop 가능 여부 최종 체크 (PRD 5-3-3-1)
+- [x] Window 기준 x,y 좌표 기준으로 Drop 처리 (PRD 5-3-3-2)
+- [x] UiComponent 생성 및 문서 저장 (PRD 5-3-3-3)
+  - [x] `UiComponent` 생성 규칙 결정
+    - [x] `id` 생성 (UUID)
+    - [x] `name` 매핑 (컴포넌트 타입명)
+  - [x] `Position` 채우기
+    - [x] `x`,`y`: Layout 기준 좌표
+    - [x] `width`,`height`: 초기값 50dp (MVP 고정값)
+  - [x] `content = remoteComposeDoc(ByteArray)` 저장
+  - [x] `WidgetDocument.ui_list`에 append (AddUiComponentUseCase)
+  - [x] DataStore 저장 트리거 (Repository 자동 처리)
 
 ### 4-4) UI Component를 Layout 영역 밖에 Drag&Drop (PRD 5-4)
-- [ ] Layout 밖 Drop 불가 처리 (PRD 5-4-1)
-  - [ ] Drop 시 데이터 업데이트 금지
-  - [ ] 레이아웃 외 영역에 붉은색 배경 경고 표시 (PRD bullet)
+- [x] Layout 밖 Drop 불가 처리 (PRD 5-4-1)
+  - [x] ValidateDropPositionUseCase 구현
+  - [x] Drop 가능 여부 실시간 검증 (isValidDropPosition)
+  - [x] 레이아웃 외 영역 경고 표시 (에러 배경색, "✗ 배치 불가")
+  - [x] Drop 시 데이터 업데이트 금지 (handleDrop에서 검증)
 
 ## 5) 위젯 렌더링 (PRD TODO)
 - [ ] 위젯 렌더링 Composable 구현부 작성
