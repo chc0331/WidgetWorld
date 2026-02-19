@@ -111,7 +111,7 @@ fun EditorScreen(
                     onDrag = dragHandler.onDrag,
                     onDragEnd = {
                         // Drop 가능 여부 확인
-                        if (uiState.isValidDropPosition) {
+                        if (uiState.isValidDropPosition(dragHandler.getCurrentOffset())) {
                             // Drop 가능 - OnDrop 이벤트 발행
                             viewModel.handleEvent(EditorUiEvent.OnDrop)
                         } else {
@@ -132,7 +132,7 @@ fun EditorScreen(
                 WidgetCanvas(
                     layoutType = uiState.layoutType,
                     isDragging = uiState.isDragging,
-                    isValidDropPosition = uiState.isValidDropPosition,
+                    isValidDropPosition = uiState.isValidDropPosition(dragHandler.getCurrentOffset()),
                     onCanvasBoundsChanged = { bounds ->
                         viewModel.handleCanvasBoundsChanged(bounds, density)
                     },
@@ -163,7 +163,7 @@ fun EditorScreen(
         
         DragOverlay(
             dragState = displayDragState,
-            isValidDropPosition = uiState.isValidDropPosition
+            isValidDropPosition = uiState.isValidDropPosition(dragHandler.getCurrentOffset())
         )
     }
 }
