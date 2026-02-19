@@ -52,6 +52,26 @@ object SampleComponents {
      * 
      * 실제 RemoteCompose Document는 추후 구현합니다.
      * 현재는 컴포넌트 이름을 ByteArray로 변환하여 사용합니다.
+     * 
+     * TODO: Future Enhancement - Add 2-Depth Category Structure
+     * 
+     * Planned:
+     * - data class ComponentCategory(id, name, emoji, components: List<ComponentItem>)
+     * - ComponentItem to include: id, categoryId fields
+     * 
+     * Example Structure:
+     * ```
+     * ComponentCategory(
+     *   id = "button",
+     *   name = "Button",
+     *   emoji = "🔘",
+     *   components = listOf(
+     *     ComponentItem(id = "icon_button", categoryId = "button", name = "IconButton", ...),
+     *     ComponentItem(id = "image_button", categoryId = "button", name = "ImageButton", ...),
+     *     ComponentItem(id = "animation_button", categoryId = "button", name = "AnimationButton", ...)
+     *   )
+     * )
+     * ```
      */
     val availableComponents = listOf(
         ComponentItem(

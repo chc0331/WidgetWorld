@@ -30,7 +30,7 @@ data class DragStateHandler(
 )
 
 /**
- * Remember Drag State
+ * Remember Drag State Handler
  * 
  * 드래그 offset을 관리하는 재사용 가능한 Composable 함수입니다.
  * 
@@ -41,7 +41,7 @@ data class DragStateHandler(
  * ```kotlin
  * @Composable
  * fun MyScreen() {
- *     val dragHandler = rememberDragState()
+ *     val dragHandler = rememberDragStateHandler()
  *     
  *     DraggableComponent(
  *         onDragStart = dragHandler.onDragStart,
@@ -64,7 +64,7 @@ data class DragStateHandler(
  * @return DragStateHandler 드래그 상태를 관리하는 핸들러
  */
 @Composable
-fun rememberDragState(): DragStateHandler {
+fun rememberDragStateHandler(): DragStateHandler {
     // 현재 드래그 offset을 저장하는 로컬 state
     var currentOffset by remember { mutableStateOf<Offset?>(null) }
     

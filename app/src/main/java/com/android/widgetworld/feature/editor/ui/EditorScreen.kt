@@ -7,6 +7,9 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
@@ -25,7 +28,8 @@ import com.android.widgetworld.feature.editor.viewmodel.EditorViewModel
  * State Hosting 원칙:
  * - collectAsState()로 State 구독
  * - Event는 ViewModel.handleEvent()로 전달
- * - Drag offset은 rememberDragState()로 로컬 관리 (성능 최적화)
+ * - Drag offset은 rememberDragStateHandler()로 로컬 관리 (성능 최적화)
+ * - UI 확장/축소 상태는 로컬 state로 관리
  *
  * @param onNavigateBack 뒤로 가기 콜백
  * @param modifier Modifier
@@ -42,7 +46,11 @@ fun EditorScreen(
     val density = LocalDensity.current
     
     // Drag offset 관리 (재사용 가능한 remember 패턴)
-    val dragHandler = rememberDragState()
+    val dragHandler = rememberDragStateHandler()
+    
+    // UI 확장/축소 상태 관리
+    var isLayoutTabExpanded by remember { mutableStateOf(true) }
+    var isComponentPaletteExpanded by remember { mutableStateOf(true) }
 
     Box(modifier = modifier.fillMaxSize()) {
         Scaffold(
@@ -75,6 +83,8 @@ fun EditorScreen(
                     onLayoutTypeSelected = { layoutType ->
                         viewModel.handleEvent(EditorUiEvent.OnLayoutTypeSelected(layoutType))
                     },
+                    isExpanded = isLayoutTabExpanded,
+                    onToggleExpand = { isLayoutTabExpanded = !isLayoutTabExpanded },
                     modifier = Modifier
                         .padding(16.dp)
                         .fillMaxWidth()
@@ -103,6 +113,8 @@ fun EditorScreen(
                         dragHandler.onDragEnd()
                         viewModel.handleEvent(EditorUiEvent.OnDragEnd)
                     },
+                    isExpanded = isComponentPaletteExpanded,
+                    onToggleExpand = { isComponentPaletteExpanded = !isComponentPaletteExpanded },
                     modifier = Modifier
                         .padding(horizontal = 16.dp)
                         .fillMaxWidth()

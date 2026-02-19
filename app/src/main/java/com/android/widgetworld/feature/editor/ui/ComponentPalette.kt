@@ -1,8 +1,14 @@
 package com.android.widgetworld.feature.editor.ui
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -11,9 +17,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -31,26 +42,48 @@ import androidx.compose.ui.unit.dp
 import com.android.widgetworld.core.model.SampleComponents
 
 /**
+ * TODO: Future Enhancement - 2-Depth Component Structure
+ *
+ * Planned Structure:
+ * - Level 1 (Category): Button, Text, Image
+ * - Level 2 (Components):
+ *   - Button → IconButton, ImageButton, AnimationButton
+ *   - Text → Title, Body, Caption
+ *   - Image → StaticImage, AnimatedImage, IconImage
+ *
+ * Implementation Plan:
+ * 1. Add ComponentCategory data class in SampleComponents.kt
+ * 2. Modify ComponentItem to include categoryId
+ * 3. Update ComponentPalette UI for accordion-style expansion
+ * 4. Add category selection state management
+ */
+
+/**
  * 컴포넌트 팔레트
  *
  * PRD 참조: 섹션 4-3-0 "컴포넌트 팔레트/리스트"
  *
  * 드래그 가능한 컴포넌트 목록을 표시합니다.
  * Long Press로 Drag를 시작할 수 있습니다.
+ * 접기/펼치기 기능을 제공하여 Canvas 영역의 시인성을 높일 수 있습니다.
  *
  * @param onComponentLongPress 컴포넌트 Long Press 콜백
  * @param onDragStart Drag 시작 콜백
  * @param onDrag Drag 중 콜백
  * @param onDragEnd Drag 종료 콜백
  * @param modifier Modifier
- */
+ * @param isExpanded 펼쳐진 상태 여부
+ * @param onToggleExpand 접기/펼치기 콜백
+ * */
 @Composable
 fun ComponentPalette(
     onComponentLongPress: (SampleComponents.ComponentItem) -> Unit,
     onDragStart: (Offset) -> Unit,
     onDrag: (Offset) -> Unit,
     onDragEnd: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isExpanded: Boolean = true,
+    onToggleExpand: () -> Unit = {}
 ) {
     Card(
         modifier = modifier,
@@ -64,35 +97,65 @@ fun ComponentPalette(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text(
-                text = "컴포넌트",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            Text(
-                text = "컴포넌트를 길게 눌러 드래그하세요",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.fillMaxWidth()
+            // Header with title and expand/collapse button
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                items(SampleComponents.availableComponents) { component ->
-                    ComponentCard(
-                        component = component,
-                        onLongPress = {
-                            onComponentLongPress(component)
+                Text(
+                    text = "컴포넌트",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                IconButton(onClick = onToggleExpand) {
+                    Icon(
+                        imageVector = if (isExpanded) {
+                            Icons.Default.KeyboardArrowUp
+                        } else {
+                            Icons.Default.KeyboardArrowDown
                         },
-                        onDragStart = onDragStart,
-                        onDrag = onDrag,
-                        onDragEnd = onDragEnd,
-                        modifier = Modifier
-                            .width(100.dp)
-                            .height(100.dp)
+                        contentDescription = if (isExpanded) "접기" else "펼치기",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                }
+            }
+
+            // Collapsible content
+            AnimatedVisibility(
+                visible = isExpanded,
+                enter = expandVertically() + fadeIn(),
+                exit = shrinkVertically() + fadeOut()
+            ) {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text(
+                        text = "컴포넌트를 길게 눌러 드래그하세요",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        items(SampleComponents.availableComponents) { component ->
+                            ComponentCard(
+                                component = component,
+                                onLongPress = {
+                                    onComponentLongPress(component)
+                                },
+                                onDragStart = onDragStart,
+                                onDrag = onDrag,
+                                onDragEnd = onDragEnd,
+                                modifier = Modifier
+                                    .width(100.dp)
+                                    .height(100.dp)
+                            )
+                        }
+                    }
                 }
             }
         }
